@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Builder Studio</title>
+    <!-- Font Inter & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JSZip & FileSaver for Zip Download Feature -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: #eef1f6;
+            color: #1e293b;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Container Utama Builder Studio */
+        .app-container {
+            width: 100%;
+            max-width: 1240px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            height: 64px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 18px;
+            color: #0f172a;
+        }
+
+        .brand-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .nav-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-tool {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-tool:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-tool-blue {
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+
+        .btn-tool-blue:hover {
+            background: #1d4ed8;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-center .btn-tool {
+            border: none;
+            background: transparent;
+            color: #64748b;
+        }
+
+        .nav-center .btn-tool:hover {
+            color: #0f172a;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-publish {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-publish:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-copy {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background: #059669;
+        }
+
+        .btn-zip {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-zip:hover {
+            background: #7c3aed;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4f46e5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Main Workspace Split View */
+        .workspace {
+            display: flex;
+            height: 620px;
+            background: #0f172a;
+        }
+
+        /* Left Panel: Code Editor */
+        .editor-panel {
+            width: 38%;
+            background: #0b1329;
+            border-right: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-tabs {
+            height: 40px;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: 12px;
+            border-radius: 6px 6px 0 0;
+            font-family: monospace;
+        }
+
+        .tab .close {
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .tab-add {
+            color: #94a3b8;
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .editor-content {
+            flex: 1;
+            padding: 16px 0;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Fira Code', Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .code-line {
+            display: flex;
+            padding: 0 16px;
+        }
+
+        .line-num {
+            width: 30px;
+            color: #475569;
+            text-align: right;
+            padding-right: 16px;
+            user-select: none;
+        }
+
+        .line-text {
+            color: #e2e8f0;
+            white-space: pre;
+        }
+
+        /* Syntax Highlighting Mock */
+        .c-tag { color: #f43f5e; }
+        .c-attr { color: #fbbf24; }
+        .c-str { color: #34d399; }
+        .c-selector { color: #38bdf8; }
+        .c-prop { color: #a78bfa; }
+        .c-val { color: #f472b6; }
+
+        .editor-footer {
+            height: 32px;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .editor-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-badge {
+            background: #2563eb;
+            color: white;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Right Panel: Canvas Preview */
+        .preview-panel {
+            flex: 1;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-toolbar {
+            height: 48px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .device-selector {
+            display: flex;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            gap: 2px;
+        }
+
+        .device-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .device-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .preview-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .preview-viewport {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f1f5f9;
+        }
+
+        /* Rendered Page inside Canvas */
+        .rendered-page {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        /* Inner Page Layout */
+        .inner-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .inner-brand {
+            font-weight: 700;
+            font-size: 18px;
+            color: #0f172a;
+        }
+
+        .inner-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .inner-links a {
+            text-decoration: none;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .inner-links a.active {
+            color: #2563eb;
+        }
+
+        .inner-btn-get {
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .inner-hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            background: #f8fafc;
+            padding: 36px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .hero-left h1 {
+            font-size: 26px;
+            line-height: 1.25;
+            color: #0f172a;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .hero-left p {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary-hero {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-secondary-hero {
+            background: white;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Overview Card Widget */
+        .overview-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+
+        .stats-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 8px;
+        }
+
+        .stat-box {
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-box .badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .badge-visitors { background: #dbeafe; color: #1e40af; }
+        .badge-conversion { background: #f3e8ff; color: #6b21a8; }
+        .badge-revenue { background: #dcfce7; color: #166534; }
+
+        .stat-box .val {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .stat-box .change {
+            font-size: 9px;
+            color: #16a34a;
+            margin-top: 2px;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 50px;
+            padding-top: 10px;
+        }
+
+        .bar {
+            flex: 1;
+            background: #93c5fd;
+            border-radius: 3px;
+        }
+
+        /* Footer Features */
+        .inner-features {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .feature-item i {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Top Navbar -->
+        <header class="top-navbar">
+            <div class="nav-left">
+                <div class="brand-logo">
+                    <div class="brand-icon"><i class="fa-solid fa-cube"></i></div>
+                    Builder Studio
+                </div>
+                <div class="nav-tools">
+                    <button class="btn-tool btn-tool-blue"><i class="fa-solid fa-arrows-up-down-left-right"></i> Drag & Drop</button>
+                    <button class="btn-tool"><i class="fa-solid fa-square-plus"></i> Tombol</button>
+                    <button class="btn-tool"><i class="fa-solid fa-bars"></i> Menu</button>
+                    <button class="btn-tool"><i class="fa-solid fa-wand-magic-sparkles"></i> Fitur</button>
+                    <button class="btn-tool"><i class="fa-solid fa-gear"></i> Setting</button>
+                </div>
+            </div>
+
+            <div class="nav-center">
+                <button class="btn-tool"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <button class="btn-tool">Undo</button>
+                <button class="btn-tool">Redo</button>
+            </div>
+
+            <div class="nav-right">
+                <button class="btn-action btn-copy" onclick="copyCode()"><i class="fa-regular fa-copy"></i> Copy Code</button>
+                <button class="btn-action btn-zip" onclick="downloadZip()"><i class="fa-solid fa-file-zipper"></i> Download .zip</button>
+                <button class="btn-action btn-publish"><i class="fa-solid fa-upload"></i> Publish</button>
+                <div class="user-avatar">U</div>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="workspace">
+            <!-- Left Panel: Code Editor -->
+            <div class="editor-panel">
+                <div class="editor-tabs">
+                    <div class="tab">
+                        index.html <i class="fa-solid fa-xmark close"></i>
+                    </div>
+                    <i class="fa-solid fa-plus tab-add"></i>
+                </div>
+                <div class="editor-content" id="codeEditor">
+                    <div class="code-line"><span class="line-num">1</span><span class="line-text"><span class="c-tag">&lt;!DOCTYPE html&gt;</span></span></div>
+                    <div class="code-line"><span class="line-num">2</span><span class="line-text"><span class="c-tag">&lt;html</span> <span class="c-attr">lang</span>=<span class="c-str">"id"</span><span class="c-tag">&gt;</span></span></div>
+                    <div class="code-line"><span class="line-num">2</span><span class="line-text">  <span class="c-tag">&lt;head&gt;</span></span></div>
+                    <div class="code-line"><span class="line-num">3</span><span class="line-text">  <span class="c-tag">&lt;meta</span> <span class="c-attr">charset</span>=<span class="c-str">"UTF-8"</span> <span class="c-tag">/&gt;</span></span></div>
+                    <div class="code-line"><span class="line-num">4</span><span class="line-text">  <span class="c-tag">&lt;style&gt;</span></span></div>
+                    <div class="code-line"><span class="line-num">5</span><span class="line-text">    <span class="c-selector">.hero</span> {</span></div>
+                    <div class="code-line"><span class="line-num">6</span><span class="line-text">      <span class="c-prop">padding</span>: <span class="c-val">48px</span>;</span></div>
+                    <div class="code-line"><span class="line-num">7</span><span class="line-text">      <span class="c-prop">background</span>: <span class="c-val">#f6f7fb</span>;</span></div>
+                    <div class="code-line"><span class="line-num">6</span><span class="line-text">      <span class="c-prop">border-radius</span>: <span class="c-val">12px</span>;</span></div>
+                    <div class="code-line"><span class="line-num">8</span><span class="line-text">    }</span></div>
+                    <div class="code-line"><span class="line-num">9</span><span class="line-text">    <span class="c-selector">.btn-primary</span> {</span></div>
+                    <div class="code-line"><span class="line-num">9</span><span class="line-text">      <span class="c-prop">background</span>: <span class="c-val">#4f46e5</span>;</span></div>
+                    <div class="code-line"><span class="line-num">10</span><span class="line-text">      <span class="c-prop">color</span>: <span class="c-val">#ffffff</span>;</span></div>
+                    <div class="code-line"><span class="line-num">11</span><span class="line-text">      <span class="c-prop">padding</span>: <span class="c-val">10px 20px</span>;</span></div>
+                    <div class="code-line"><span class="line-num">12</span><span class="line-text">      <span class="c-prop">border-radius</span>: <span class="c-val">8px</span>;</span></div>
+                    <div class="code-line"><span class="line-num">12</span><span class="line-text">    }</span></div>
+                    <div class="code-line"><span class="line-num">13</span><span class="line-text">  <span class="c-tag">&lt;/style&gt;</span></span></div>
+                </div>
+                <div class="editor-footer">
+                    <div class="editor-footer-left">
+                        <span class="tag-badge">HTML</span>
+                        <span>Line 13, Column 22</span>
+                    </div>
+                    <div>UTF-8 &nbsp;&nbsp; Spaces: 2</div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Canvas Preview -->
+            <div class="preview-panel">
+                <div class="preview-toolbar">
+                    <div class="preview-title">Canvas Preview</div>
+                    <div class="device-selector">
+                        <button class="device-btn active"><i class="fa-solid fa-desktop"></i> Desktop</button>
+                        <button class="device-btn"><i class="fa-solid fa-tablet-screen-button"></i> Tablet</button>
+                        <button class="device-btn"><i class="fa-solid fa-mobile-screen-button"></i> Mobile</button>
+                    </div>
+                </div>
+                <div class="preview-viewport">
+                    <div class="rendered-page">
+                        <div class="inner-nav">
+                            <div class="inner-brand">YourBrand</div>
+                            <ul class="inner-links">
+                                <li><a href="#" class="active">Home</a></li>
+                                <li><a href="#">Features</a></li>
+                                <li><a href="#">Pricing</a></li>
+                                <li><a href="#">About</a></li>
+                            </ul>
+                            <button class="inner-btn-get">Get Started</button>
+                        </div>
+
+                        <div class="inner-hero">
+                            <div class="hero-left">
+                                <h1>Bangun Website Impianmu Tanpa Coding</h1>
+                                <p>Buat halaman landing, dashboard, dan aplikasi web hanya dengan drag & drop. Cepat, mudah, dan siap publish kapan saja.</p>
+                                <div class="hero-buttons">
+                                    <button class="btn-primary-hero"><i class="fa-solid fa-play"></i> Mulai Sekarang</button>
+                                    <button class="btn-secondary-hero">Lihat Demo</button>
+                                </div>
+                            </div>
+                            <div class="hero-right">
+                                <div class="overview-card">
+                                    <div class="card-title">Overview</div>
+                                    <div class="stats-grid">
+                                        <div class="stat-box">
+                                            <span class="badge badge-visitors">Visitors</span>
+                                            <div class="val">12.4K</div>
+                                            <div class="change">+8.2%</div>
+                                        </div>
+                                        <div class="stat-box">
+                                            <span class="badge badge-conversion">Conversion</span>
+                                            <div class="val">3.8%</div>
+                                            <div class="change">+1.1%</div>
+                                        </div>
+                                        <div class="stat-box">
+                                            <span class="badge badge-revenue">Revenue</span>
+                                            <div class="val">$4.2K</div>
+                                            <div class="change">+12.5%</div>
+                                        </div>
+                                    </div>
+                                    <div class="chart-bars">
+                                        <div class="bar" style="height: 40%;"></div>
+                                        <div class="bar" style="height: 65%;"></div>
+                                        <div class="bar" style="height: 50%;"></div>
+                                        <div class="bar" style="height: 80%;"></div>
+                                        <div class="bar" style="height: 60%;"></div>
+                                        <div class="bar" style="height: 90%;"></div>
+                                        <div class="bar" style="height: 70%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="inner-features">
+                            <div class="feature-item"><i class="fa-solid fa-circle-check"></i> Tanpa Kartu Kredit</div>
+                            <div class="feature-item"><i class="fa-solid fa-circle-check"></i> Setup dalam 5 Menit</div>
+                            <div class="feature-item"><i class="fa-solid fa-circle-check"></i> Support 24/7</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('codeEditor').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Kode berhasil disalin ke clipboard!');
+            }).catch(() => {
+                alert('Gagal menyalin kode.');
+            });
+        }
+
+        function downloadZip() {
+            const code = document.getElementById('codeEditor').innerText;
+            const zip = new JSZip();
+            zip.file('index.html', code);
+            zip.generateAsync({ type: 'blob' }).then((content) => {
+                saveAs(content, 'builder-studio-export.zip');
+            });
+        }
+    </script>
+
+</body>
+</html>
